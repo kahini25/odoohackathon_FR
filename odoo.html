@@ -1,0 +1,2242 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackIt - Minimal Q&A Forum</title>
+    <link rel="icon" type="image/x-icon" href="icon.jpg">
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #222f2e;
+            --primary: #00bfae;
+            --secondary: #74b9ff;
+            --accent: #55efc4;
+            --highlight: #e0f7fa;
+            --hue1: #b2f7ef;
+            --hue2: #a3e4db;
+            --hue3: #d4fc79;
+            --hue4: #96e6a1;
+            --questions-bg: #f8fcff;
+            --question-card-bg: #e8f8f5;
+            --comment-bg: #f8f9fa;
+            --comment-border: #00bfae;
+            --comment-nested-bg: #ffffff;
+            --comment-nested-border: #74b9ff;
+            --comment-nested2-bg: #e0f7fa;
+            --comment-nested2-border: #55efc4;
+            --header-bg: #ffffffee;
+            --header-shadow: 0 8px 32px rgba(0, 191, 174, 0.08);
+            --btn-primary-bg: linear-gradient(45deg, #00bfae, #74b9ff);
+            --btn-primary-color: #fff;
+            --btn-secondary-bg: #e0f7fa;
+            --btn-secondary-color: #00bfae;
+        }
+
+        body.dark-mode {
+            --background: #181818;
+            --foreground: #fff;
+            --aqua: #74f9ff;
+            --primary: #ff9800;
+            --secondary: #ff5252;
+            --accent: #ff7043;
+            --highlight: #222;
+            --hue1: #23272e;
+            --hue2: #1a1d23;
+            --hue3: #2d1e2f;
+            --hue4: #2e2323;
+            --questions-bg: #23272e;
+            --question-card-bg: #2d1e2f;
+            --comment-bg: #232323;
+            --comment-border: #ff9800;
+            --comment-nested-bg: #181818;
+            --comment-nested-border: #ff5252;
+            --comment-nested2-bg: #232323;
+            --comment-nested2-border: #ff7043;
+            --header-bg: #181818ee;
+            --header-shadow: 0 8px 32px rgba(255, 152, 0, 0.08);
+            --btn-primary-bg: linear-gradient(45deg, #ff9800, #ff5252);
+            --btn-primary-color: #fff;
+            --btn-secondary-bg: #232323;
+            --btn-secondary-color: #ff9800;
+        }
+
+        body.dark-mode,
+        body.dark-mode .questions-section,
+        body.dark-mode .question-card,
+        body.dark-mode .sidebar-widget,
+        body.dark-mode .modal-content {
+            color: var(--foreground);
+        }
+
+        body.dark-mode h1,
+        body.dark-mode h2,
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode .logo,
+        body.dark-mode .section-title,
+        body.dark-mode .widget-title,
+        body.dark-mode .tag,
+        body.dark-mode a,
+        body.dark-mode .comment-author-name {
+            color: var(--aqua) !important;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        body.dark-mode .answer-content {
+            color: #4c4c4c !important;
+        }
+
+        body.dark-mode .answer-actions .btn,
+        body.dark-mode .answer-actions .accept-answer-btn {
+            background-color: #000 !important;
+            color: #fff !important;
+            border: 1px solid #444;
+        }
+
+        body.dark-mode .answer-actions .btn:hover,
+        body.dark-mode .answer-actions .accept-answer-btn:hover {
+            background-color: #111 !important;
+        }
+
+        /* Vote buttons in dark mode */
+        body.dark-mode .vote-btn {
+            background-color: #000 !important;
+            color: #fff !important;
+            border: 2px solid #333 !important;
+        }
+
+        /* Active vote button highlight */
+        body.dark-mode .vote-btn.active {
+            background: var(--primary) !important;
+            color: #fff !important;
+            border-color: var(--primary) !important;
+        }
+
+        /* On hover */
+        body.dark-mode .vote-btn:hover {
+            background-color: #111 !important;
+            color: var(--primary) !important;
+            border-color: var(--primary) !important;
+        }
+
+        /* Vote count */
+        body.dark-mode .vote-count {
+            color: #ccc !important;
+            font-weight: 600;
+        }
+
+        body.dark-mode .vote-count {
+            color: var(--primary) !important;
+        }
+
+        /* Vote count in questions and answers */
+        body.dark-mode .vote-count {
+            color: #ccc !important;
+            /* or var(--primary) if you prefer accent */
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            margin-top: 0;
+            padding-top: 20px;
+        }
+
+        header {
+            background: var(--header-bg);
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: var(--header-shadow);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 15px 30px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            min-height: 100vh;
+            line-height: 1.6;
+            padding-top: 80px;
+            /* Add padding to account for fixed header */
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            gap: 20px;
+        }
+
+        /* Dark mode: notification dropdown background and text */
+        body.dark-mode .notification-dropdown {
+            background-color: #1e1e1e !important;
+            color: #ccc !important;
+            border: 1px solid #333;
+        }
+
+        /* Individual notification item text */
+        body.dark-mode .notification-item {
+            color: #ccc !important;
+            border-bottom: 1px solid #2a2a2a;
+        }
+
+        /* Hover effect in dark mode */
+        body.dark-mode .notification-item:hover {
+            background-color: #2a2a2a !important;
+        }
+
+        /* Time text inside notification */
+        body.dark-mode .notification-time {
+            color: #888 !important;
+        }
+
+        /* Unread indicator (optional highlight) */
+        body.dark-mode .notification-item.unread {
+            border-left: 3px solid var(--primary);
+        }
+
+
+        .logo {
+            font-size: 2.2em;
+            font-weight: bold;
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent), var(--hue3));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            transition: transform 0.2s ease;
+            margin-left: 0;
+            padding-left: 0;
+        }
+
+        .logo:hover {
+            transform: scale(1.05);
+        }
+
+        /* Ensure logo is at the very left */
+        .header-content>.logo {
+            flex-shrink: 0;
+            margin-right: auto;
+        }
+
+        .nav-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .notification-bell {
+            position: relative;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+            z-index: 10002;
+        }
+
+        .notification-bell:hover {
+            background: rgba(103, 126, 234, 0.1);
+            transform: scale(1.1);
+        }
+
+        .notification-count {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4757;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-role {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .role-guest {
+            background: #f1f2f6;
+            color: #747d8c;
+        }
+
+        .role-user {
+            background: #e8f4fd;
+            color: #0984e3;
+        }
+
+        .role-admin {
+            background: #ffeaa7;
+            color: #fdcb6e;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-color);
+        }
+
+        .btn-secondary {
+            background: var(--btn-secondary-bg);
+            color: var(--btn-secondary-color);
+            border: 2px solid var(--primary);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .questions-section {
+            background: var(--questions-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1;
+            position: relative;
+            overflow: visible;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .question-card {
+            background: var(--question-card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid var(--primary);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .question-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: rgba(103, 126, 234, 0.3);
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .question-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .question-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 15px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .question-title:hover {
+            color: #667eea;
+        }
+
+        .question-meta {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: #636e72;
+        }
+
+        .vote-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vote-btn {
+            background: none;
+            border: 2px solid #ddd;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .vote-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .vote-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .vote-count {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .tag:hover {
+            transform: scale(1.05);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-widget {
+            background: var(--background);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .widget-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #2d3436;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #636e72;
+            margin-top: 5px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .modal-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #2d3436;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #636e72;
+            padding: 5px;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255, 77, 87, 0.1);
+            color: #ff4757;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(103, 126, 234, 0.1);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .editor-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .editor-btn {
+            background: none;
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .editor-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .editor-separator {
+            width: 1px;
+            height: 20px;
+            background: #ddd;
+            margin: 0 5px;
+        }
+
+        .tag-input-container {
+            position: relative;
+        }
+
+        .tag-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 100;
+            display: none;
+        }
+
+        .tag-suggestion {
+            padding: 12px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .tag-suggestion:hover {
+            background: #f8f9fa;
+        }
+
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .notification-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            min-width: 300px;
+            max-height: 400px;
+            overflow-y: auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            z-index: 10001;
+            display: none;
+        }
+
+        .notification-item {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f2f6;
+            transition: background 0.3s ease;
+        }
+
+        .notification-item:hover {
+            background: #f8f9fa;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-item.unread {
+            background: #f8f9fa;
+            border-left: 3px solid #667eea;
+        }
+
+        .notification-item.read {
+            opacity: 0.7;
+        }
+
+        .notification-text {
+            font-size: 0.75em;
+            line-height: 1.3;
+            font-weight: 400;
+        }
+
+        .notification-time {
+            font-size: 0.65em;
+            color: #636e72;
+            margin-top: 3px;
+            font-weight: 400;
+        }
+
+        .question-detail-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: #636e72;
+        }
+
+        .question-detail-body {
+            background: var(--questions-bg);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .question-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .answers-section {
+            border-top: 2px solid #f1f2f6;
+            padding-top: 20px;
+        }
+
+        .answers-section h4 {
+            margin-bottom: 20px;
+            color: #2d3436;
+        }
+
+        .answer-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .answer-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .answer-author {
+            font-weight: 600;
+            color: #2d3436;
+        }
+
+        .answer-time {
+            font-size: 0.9em;
+            color: #636e72;
+        }
+
+        .answer-content {
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .answer-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .accept-answer-btn {
+            background: #00b894;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .accept-answer-btn:hover {
+            background: #00a085;
+            transform: translateY(-2px);
+        }
+
+        .accepted-answer {
+            border-left-color: #00b894;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e8f5e8 100%);
+        }
+
+        .accepted-badge {
+            background: #00b894;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 10px;
+        }
+
+        .add-answer-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #f1f2f6;
+        }
+
+        .add-answer-section h4 {
+            margin-bottom: 15px;
+            color: #2d3436;
+        }
+
+        .comment {
+            background: var(--comment-bg);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 3px solid var(--comment-border);
+            position: relative;
+        }
+
+        .comment .comment {
+            margin-left: 30px;
+            margin-top: 15px;
+            background: var(--comment-nested-bg);
+            border-left-color: var(--comment-nested-border);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .comment .comment .comment {
+            border-left-color: var(--comment-nested2-border);
+            background: var(--comment-nested2-bg);
+        }
+
+        .comment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .comment-author-name {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+
+        .comment-time {
+            font-size: 0.8em;
+            color: #636e72;
+        }
+
+        .comment-content {
+            color: #2d3436;
+            line-height: 1.5;
+            font-size: 0.9em;
+        }
+
+        .comment-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .comment-action-btn {
+            background: none;
+            border: none;
+            color: #636e72;
+            cursor: pointer;
+            font-size: 0.8em;
+            padding: 5px 10px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .comment-action-btn:hover {
+            background: #e9ecef;
+            color: #2d3436;
+        }
+
+        .comment-vote-section {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .comment-vote-btn {
+            background: none;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 0.8em;
+        }
+
+        .comment-vote-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+
+        .comment-vote-count {
+            font-size: 0.8em;
+            font-weight: 500;
+            color: #2d3436;
+        }
+
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 34px;
+        }
+
+        .theme-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .theme-switch .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.4s;
+            border-radius: 34px;
+        }
+
+        .theme-switch .slider::before {
+            position: absolute;
+            content: "🌞";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            text-align: center;
+            line-height: 26px;
+            font-size: 16px;
+            border-radius: 50%;
+            transition: 0.4s;
+        }
+
+        .theme-switch input:checked+.slider {
+            background-color: #666;
+        }
+
+        .theme-switch input:checked+.slider::before {
+            transform: translateX(26px);
+            content: "🌙";
+        }
+
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .question-meta {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="logo" onclick="goToHome()" style="cursor: pointer;">StackIt</div>
+                <div class="nav-controls">
+                    <div class="notification-bell" onclick="toggleNotifications()">
+                        🔔
+                        <span class="notification-count" id="notificationCount">3</span>
+                        <div class="notification-dropdown" id="notificationDropdown">
+                            <div class="notification-item">
+                                <div class="notification-text">Someone answered your question about React hooks</div>
+                                <div class="notification-time">2 minutes ago</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-text">@john_doe mentioned you in a comment</div>
+                                <div class="notification-time">1 hour ago</div>
+                            </div>
+                            <div class="notification-item">
+                                <div class="notification-text">New comment on your answer</div>
+                                <div class="notification-time">3 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-menu">
+                        <span class="user-role role-user" id="userRole">User</span>
+                        <div class="auth-buttons" id="authButtons">
+                            <button class="btn btn-secondary" onclick="showLogin()">Login</button>
+                            <button class="btn btn-primary" onclick="showRegister()">Register</button>
+                        </div>
+                    </div>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggleCheckbox" onchange="toggleTheme()">
+                        <span class="slider"></span>
+                    </label>
+
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="questions-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Questions</h2>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="position: relative;">
+                            <span style="
+        position: absolute;
+        left: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #888;
+        font-size: 1rem;">🔍</span>
+                            <input type="text" id="questionSearch" class="form-input" placeholder="Search questions..."
+                                oninput="filterQuestions()" style="padding-left: 36px; width: 250px;">
+                        </div>
+                        <button class="btn btn-primary" onclick="showAskQuestion()">Ask Question</button>
+                    </div>
+                </div>
+
+
+
+                <div class="question-card">
+                    <div class="question-title" onclick="showQuestionDetail()">How to implement authentication in React?
+                    </div>
+                    <div class="question-meta">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="vote(this, 'up')">▲</button>
+                            <span class="vote-count">12</span>
+                            <button class="vote-btn" onclick="vote(this, 'down')">▼</button>
+                        </div>
+                        <span>Asked by john_doe</span>
+                        <span>2 hours ago</span>
+                        <span>3 answers</span>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">React</span>
+                        <span class="tag">Authentication</span>
+                        <span class="tag">JavaScript</span>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <div class="question-title" onclick="showQuestionDetail()">Best practices for database design?</div>
+                    <div class="question-meta">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="vote(this, 'up')">▲</button>
+                            <span class="vote-count">8</span>
+                            <button class="vote-btn" onclick="vote(this, 'down')">▼</button>
+                        </div>
+                        <span>Asked by jane_smith</span>
+                        <span>5 hours ago</span>
+                        <span>1 answer</span>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Database</span>
+                        <span class="tag">MySQL</span>
+                        <span class="tag">Design</span>
+                    </div>
+                </div>
+
+                <div class="question-card">
+                    <div class="question-title" onclick="showQuestionDetail()">How to optimize Python code performance?
+                    </div>
+                    <div class="question-meta">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="vote(this, 'up')">▲</button>
+                            <span class="vote-count">15</span>
+                            <button class="vote-btn" onclick="vote(this, 'down')">▼</button>
+                        </div>
+                        <span>Asked by dev_master</span>
+                        <span>1 day ago</span>
+                        <span>7 answers</span>
+                    </div>
+                    <div class="tags">
+                        <span class="tag">Python</span>
+                        <span class="tag">Performance</span>
+                        <span class="tag">Optimization</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-widget">
+                    <h3 class="widget-title">Community Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-number">1,247</div>
+                            <div class="stat-label">Questions</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">3,829</div>
+                            <div class="stat-label">Answers</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">567</div>
+                            <div class="stat-label">Users</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-number">89</div>
+                            <div class="stat-label">Online</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-widget">
+                    <h3 class="widget-title">Popular Tags</h3>
+                    <div class="tags">
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">React</span>
+                        <span class="tag">Python</span>
+                        <span class="tag">Node.js</span>
+                        <span class="tag">Database</span>
+                        <span class="tag">CSS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ask Question Modal -->
+    <div class="modal" id="askQuestionModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Ask a Question</h3>
+                <button class="close-btn" onclick="closeModal('askQuestionModal')">&times;</button>
+            </div>
+            <form id="askQuestionForm">
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" class="form-input" placeholder="Short and descriptive title" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <div class="editor-toolbar">
+                        <button type="button" class="editor-btn" onclick="formatText('bold')"
+                            title="Bold"><strong>B</strong></button>
+                        <button type="button" class="editor-btn" onclick="formatText('italic')"
+                            title="Italic"><em>I</em></button>
+                        <button type="button" class="editor-btn" onclick="formatText('strikeThrough')"
+                            title="Strikethrough"><s>S</s></button>
+                        <button type="button" class="editor-btn" onclick="insertList('ul')"
+                            title="Bullet List">•</button>
+                        <button type="button" class="editor-btn" onclick="insertList('ol')"
+                            title="Numbered List">1.</button>
+                        <button type="button" class="editor-btn" onclick="insertEmoji()"
+                            title="Insert Emoji">😊</button>
+                        <button type="button" class="editor-btn" onclick="insertLink()" title="Insert Link">🔗</button>
+                        <button type="button" class="editor-btn" onclick="insertImage()"
+                            title="Insert Image">🖼️</button>
+                        <div class="editor-separator"></div>
+                        <button type="button" class="editor-btn" onclick="alignText('justifyLeft')"
+                            title="Align Left">⬅️</button>
+                        <button type="button" class="editor-btn" onclick="alignText('justifyCenter')"
+                            title="Align Center">↔️</button>
+                        <button type="button" class="editor-btn" onclick="alignText('justifyRight')"
+                            title="Align Right">➡️</button>
+                    </div>
+                    <div class="form-input form-textarea" contenteditable="true"
+                        placeholder="Describe your question in detail..." style="min-height: 120px; overflow-y: auto;">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Tags</label>
+                    <div class="tag-input-container">
+                        <input type="text" class="form-input" placeholder="Add relevant tags (e.g., React, JavaScript)"
+                            id="tagInput" onkeyup="showTagSuggestions(this.value)">
+                        <div class="tag-suggestions" id="tagSuggestions"></div>
+                    </div>
+                    <div class="selected-tags" id="selectedTags"></div>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Question</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Login</h3>
+                <button class="close-btn" onclick="closeModal('loginModal')">&times;</button>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal" id="registerModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Register</h3>
+                <button class="close-btn" onclick="closeModal('registerModal')">&times;</button>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Register</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Question Detail Modal -->
+    <div class="modal" id="questionDetailModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="questionDetailTitle">Question Title</h3>
+                <button class="close-btn" onclick="closeModal('questionDetailModal')">&times;</button>
+            </div>
+            <div id="questionDetailContent">
+                <div class="question-detail-meta">
+                    <span id="questionAuthor">Asked by john_doe</span>
+                    <span id="questionTime">2 hours ago</span>
+                    <span id="questionVotes">12 votes</span>
+                </div>
+                <div class="question-detail-body" id="questionBody">
+                    <!-- Question content will be loaded here -->
+                </div>
+                <div class="question-tags" id="questionTags">
+                    <!-- Tags will be loaded here -->
+                </div>
+
+                <div class="answers-section">
+                    <h4>Answers (<span id="answerCount">3</span>)</h4>
+                    <div id="answersList">
+                        <!-- Answers will be loaded here -->
+                    </div>
+                    <!-- Sample Reddit-style threaded comments for demo -->
+                    <div class="comment">
+                        <div><strong>user123</strong>: This is a top-level comment.</div>
+                        <div class="comment">
+                            <div><strong>user456</strong>: This is a reply to the top-level comment.</div>
+                            <div class="comment">
+                                <div><strong>user789</strong>: This is a reply to the reply.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="add-answer-section">
+                        <h4>Your Answer</h4>
+                        <div id="guestAnswerNotice"
+                            style="display: none; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 12px; margin-bottom: 15px; color: #856404;">
+                            <strong>Guest Notice:</strong> Guest users can read questions and answers but cannot post
+                            new answers. Please login or register to contribute.
+                        </div>
+                        <div class="editor-toolbar">
+                            <button type="button" class="editor-btn" onclick="formatText('bold')"
+                                title="Bold"><strong>B</strong></button>
+                            <button type="button" class="editor-btn" onclick="formatText('italic')"
+                                title="Italic"><em>I</em></button>
+                            <button type="button" class="editor-btn" onclick="formatText('strikeThrough')"
+                                title="Strikethrough"><s>S</s></button>
+                            <button type="button" class="editor-btn" onclick="insertList('ul')"
+                                title="Bullet List">•</button>
+                            <button type="button" class="editor-btn" onclick="insertList('ol')"
+                                title="Numbered List">1.</button>
+                            <button type="button" class="editor-btn" onclick="insertEmoji()"
+                                title="Insert Emoji">😊</button>
+                            <button type="button" class="editor-btn" onclick="insertLink()"
+                                title="Insert Link">🔗</button>
+                            <button type="button" class="editor-btn" onclick="insertImage()"
+                                title="Insert Image">🖼️</button>
+                            <div class="editor-separator"></div>
+                            <button type="button" class="editor-btn" onclick="alignText('justifyLeft')"
+                                title="Align Left">⬅️</button>
+                            <button type="button" class="editor-btn" onclick="alignText('justifyCenter')"
+                                title="Align Center">↔️</button>
+                            <button type="button" class="editor-btn" onclick="alignText('justifyRight')"
+                                title="Align Right">➡️</button>
+                        </div>
+                        <div class="form-input form-textarea" id="answerTextarea" contenteditable="true"
+                            placeholder="Write your answer here..." style="min-height: 120px; overflow-y: auto;"></div>
+                        <button class="btn btn-primary" onclick="submitAnswer()" id="postAnswerBtn">Post Answer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+
+        let questionList = [];
+
+        // Authentication check - redirect to login if not authenticated
+        function checkAuthentication() {
+            const userInfo = localStorage.getItem('stackit_user');
+            if (!userInfo) {
+                window.location.href = 'login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Check authentication on page load
+        if (!checkAuthentication()) {
+            // Page will redirect, so stop execution
+            throw new Error('Redirecting to login');
+        }
+
+        // Application state
+        let currentUser = null;
+        let selectedTags = [];
+        let notifications = [];
+        let currentQuestionId = null;
+        let answers = [];
+
+        // Initialize user from localStorage
+        function initializeUser() {
+            const userInfo = localStorage.getItem('stackit_user');
+            if (userInfo) {
+                const user = JSON.parse(userInfo);
+                currentUser = {
+                    username: user.username,
+                    email: user.email,
+                    role: user.provider === 'guest' ? 'guest' : 'user'
+                };
+                updateUserInterface();
+            }
+        }
+
+        document.getElementById('askQuestionForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const title = this.querySelector('input[type="text"]').value;
+            const body = this.querySelector('[contenteditable="true"]').innerHTML;
+
+            if (!selectedTags.length || !title || !body) {
+                alert("Please fill in all fields and add at least one tag.");
+                return;
+            }
+
+            const question = {
+                title,
+                body,
+                author: currentUser?.username || 'guest',
+                tags: selectedTags,
+                votes: 0
+            };
+
+            fetch('/api/questions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(question)
+            })
+                .then(res => res.json())
+                .then(() => {
+                    alert('Question posted!');
+                    closeModal('askQuestionModal');
+                    this.reset();
+                    selectedTags = [];
+                    updateSelectedTags();
+                    loadQuestions(); // Refresh list
+                });
+        });
+
+        function loadQuestions() {
+            fetch('/api/questions')
+                .then(res => res.json())
+                .then(data => {
+                    questionList = data;
+
+                    const container = document.querySelector('.questions-section');
+                    container.innerHTML = '';
+
+                    data.forEach(q => {
+                        container.innerHTML += `
+          <div class="question-card">
+            <div class="question-title" onclick="showQuestionDetailById('${q._id}')">
+              ${q.title}
+            </div>
+            <div class="question-meta">
+              <span>Asked by ${q.author}</span>
+              <span>${new Date(q.createdAt).toLocaleString()}</span>
+            </div>
+            <div class="tags">${q.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
+          </div>
+        `;
+                    });
+                });
+        }
+
+
+
+        function submitAnswer() {
+            const content = document.getElementById('answerTextarea').innerHTML;
+            if (!currentQuestionId || !content) return;
+
+            const answer = {
+                content,
+                author: currentUser?.username || 'guest',
+                votes: 0
+            };
+
+            fetch(`/api/questions/${currentQuestionId}/answers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(answer)
+            })
+                .then(res => res.json())
+                .then(() => {
+                    loadAnswers(currentQuestionId);
+                    document.getElementById('answerTextarea').innerHTML = '';
+                });
+        }
+
+        function loadAnswers(questionId) {
+            fetch(`/api/questions/${questionId}/answers`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('answersList');
+                    document.getElementById('answerCount').textContent = data.length;
+                    container.innerHTML = data.map(a => `
+        <div class="answer-card">
+          <div class="answer-header">
+            <span class="answer-author">${a.author}</span>
+            <span class="answer-time">${new Date(a.createdAt).toLocaleString()}</span>
+          </div>
+          <div class="answer-content">${a.content}</div>
+        </div>
+      `).join('');
+                });
+        }
+
+
+
+
+
+        // Logout function
+        function logout() {
+            console.log('Logout function called');
+            localStorage.removeItem('stackit_user');
+            console.log('User data removed from localStorage');
+
+            // Try to redirect to login page
+            try {
+                window.location.href = 'login.html';
+                console.log('Redirecting to login page');
+            } catch (error) {
+                console.error('Error redirecting:', error);
+                // Fallback: try to redirect to the same directory
+                window.location.href = './login.html';
+            }
+        }
+
+        // Tag suggestions
+        const availableTags = [
+            'JavaScript', 'React', 'Python', 'Node.js', 'HTML', 'CSS', 'Vue.js', 'Angular',
+            'Java', 'C++', 'C#', 'PHP', 'Ruby', 'Go', 'Rust', 'Swift', 'Database', 'MySQL',
+            'PostgreSQL', 'MongoDB', 'Redis', 'AWS', 'Docker', 'Kubernetes', 'Git', 'Linux'
+        ];
+
+        // Questions array (dynamic)
+        let questions = [
+            {
+                id: 1,
+                title: 'How to implement authentication in React?',
+                body: `I'm building a React application and need to implement user authentication. I've heard about JWT tokens and OAuth, but I'm not sure which approach to use. Can someone provide a step-by-step guide for implementing secure authentication in React?\n\nI'm particularly interested in:\n• JWT token management\n• Protected routes\n• User session handling\n• Best practices for security`,
+                author: 'john_doe',
+                time: '2 hours ago',
+                votes: 12,
+                tags: ['React', 'Authentication', 'JavaScript'],
+                answers: [
+                    {
+                        id: 1,
+                        author: 'react_expert',
+                        content: `Here's a comprehensive guide for React authentication:\n\n1. **Install required packages:**\n\`\`\`bash\nnpm install jsonwebtoken axios react-router-dom\n\`\`\`\n\n2. **Create authentication context:**\n\`\`\`jsx\nconst AuthContext = createContext();\n\`\`\`\n\n3. **Implement JWT storage:**\n\`\`\`jsx\nlocalStorage.setItem('token', jwtToken);\n\`\`\`\n\nThis approach provides secure, scalable authentication.`,
+                        time: '1 hour ago',
+                        votes: 8,
+                        accepted: false
+                    },
+                    {
+                        id: 2,
+                        author: 'security_guru',
+                        content: `I recommend using **Auth0** or **Firebase Auth** for production apps. They handle security best practices automatically.\n\nFor custom implementation:\n• Use HTTPS only\n• Implement token refresh\n• Add CSRF protection\n• Store tokens in httpOnly cookies\n\nWould you like me to show you a complete example?`,
+                        time: '30 minutes ago',
+                        votes: 15,
+                        accepted: true
+                    }
+                ]
+            },
+            {
+                id: 2,
+                title: 'Best practices for database design?',
+                body: 'What are the best practices for designing a scalable and maintainable database? Any tips for normalization and indexing?',
+                author: 'jane_smith',
+                time: '5 hours ago',
+                votes: 8,
+                tags: ['Database', 'MySQL', 'Design'],
+                answers: []
+            },
+            {
+                id: 3,
+                title: 'How to optimize Python code performance?',
+                body: 'My Python code is running slow. What are some tips and tools to optimize performance?',
+                author: 'dev_master',
+                time: '1 day ago',
+                votes: 15,
+                tags: ['Python', 'Performance', 'Optimization'],
+                answers: []
+            }
+        ];
+
+        function renderQuestions() {
+            const section = document.querySelector('.questions-section');
+            const header = section.querySelector('.section-header');
+            // Remove all question cards
+            section.querySelectorAll('.question-card').forEach(card => card.remove());
+            // Render from questions array
+            questions.slice().reverse().forEach(q => {
+                const card = document.createElement('div');
+                card.className = 'question-card';
+                card.innerHTML = `
+                    <div class="question-title" style="cursor:pointer;" onclick="showQuestionDetail(${q.id})">${q.title}</div>
+                    <div class="question-meta">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="event.stopPropagation(); vote(this, 'up', ${q.id})">▲</button>
+                            <span class="vote-count">${q.votes}</span>
+                            <button class="vote-btn" onclick="event.stopPropagation(); vote(this, 'down', ${q.id})">▼</button>
+                        </div>
+                        <span>Asked by ${q.author}</span>
+                        <span>${q.time}</span>
+                        <span>${q.answers.length} answer${q.answers.length !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div class="tags">${q.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>
+                `;
+                card.addEventListener('click', function (e) {
+                    if (!e.target.closest('.vote-btn') && !e.target.closest('.tag')) {
+                        showQuestionDetail(q.id);
+                    }
+                });
+                section.insertBefore(card, section.children[1]);
+            });
+        }
+
+        function showQuestionDetailById(id) {
+            const q = questionList.find(item => item._id === id);
+            if (!q) return;
+
+            currentQuestionId = id;
+
+            document.getElementById('questionDetailTitle').textContent = q.title;
+            document.getElementById('questionAuthor').textContent = `Asked by ${q.author}`;
+            document.getElementById('questionTime').textContent = new Date(q.createdAt).toLocaleString();
+            document.getElementById('questionVotes').textContent = `${q.votes || 0} votes`;
+            document.getElementById('questionBody').innerHTML = q.body;
+            document.getElementById('questionTags').innerHTML = q.tags.map(tag => `<span class="tag">${tag}</span>`).join('');
+
+            loadAnswers(id); // fetch answers for that question
+
+            document.getElementById('questionDetailModal').style.display = 'block';
+        }
+
+
+        function updateAnswerSectionForUser() {
+            const guestNotice = document.getElementById('guestAnswerNotice');
+            const answerTextarea = document.getElementById('answerTextarea');
+            const postAnswerBtn = document.getElementById('postAnswerBtn');
+
+            if (currentUser && currentUser.role === 'guest') {
+                // Show guest notice and disable answer functionality
+                guestNotice.style.display = 'block';
+                answerTextarea.contentEditable = false;
+                answerTextarea.style.backgroundColor = '#f5f5f5';
+                answerTextarea.placeholder = 'Guest users cannot post answers. Please login or register.';
+                postAnswerBtn.textContent = 'Post Answer (Guest)';
+                postAnswerBtn.style.opacity = '0.6';
+                postAnswerBtn.title = 'Guest users cannot post answers';
+            } else {
+                // Hide guest notice and enable answer functionality
+                guestNotice.style.display = 'none';
+                answerTextarea.contentEditable = true;
+                answerTextarea.style.backgroundColor = '';
+                answerTextarea.placeholder = 'Write your answer here...';
+                postAnswerBtn.textContent = 'Post Answer';
+                postAnswerBtn.style.opacity = '1';
+                postAnswerBtn.title = '';
+            }
+        }
+
+        // Voting system
+        function vote(button, direction, qid) {
+            if (!currentUser) {
+                alert('Please login to vote');
+                return;
+            }
+            if (currentUser.role === 'guest') {
+                alert('Guest users cannot vote. Please login or register to vote on questions.');
+                return;
+            }
+            const question = questions.find(q => q.id === qid);
+            if (!question) return;
+            if (direction === 'up') question.votes++;
+            else question.votes--;
+            renderQuestions();
+        }
+
+        // Notification system
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+
+        // Tag system
+        function showTagSuggestions(value) {
+            const suggestions = document.getElementById('tagSuggestions');
+
+            if (value.length < 2) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            const filtered = availableTags.filter(tag =>
+                tag.toLowerCase().includes(value.toLowerCase()) &&
+                !selectedTags.includes(tag)
+            );
+
+            if (filtered.length === 0) {
+                suggestions.style.display = 'none';
+                return;
+            }
+
+            suggestions.innerHTML = filtered.map(tag =>
+                `<div class="tag-suggestion" onclick="addTag('${tag}')">${tag}</div>`
+            ).join('');
+
+            suggestions.style.display = 'block';
+        }
+
+        function addTag(tag) {
+            if (!selectedTags.includes(tag)) {
+                selectedTags.push(tag);
+                updateSelectedTags();
+            }
+            document.getElementById('tagInput').value = '';
+            document.getElementById('tagSuggestions').style.display = 'none';
+        }
+
+        function removeTag(tag) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            updateSelectedTags();
+        }
+
+        function updateSelectedTags() {
+            const container = document.getElementById('selectedTags');
+            container.innerHTML = selectedTags.map(tag =>
+                `<span class="tag" onclick="removeTag('${tag}')">${tag} ×</span>`
+            ).join('');
+        }
+
+        // Rich text editor functions
+        function formatText(command) {
+            document.execCommand(command, false, null);
+        }
+
+        function insertList(type) {
+            if (type === 'ul') {
+                document.execCommand('insertUnorderedList', false, null);
+            } else {
+                document.execCommand('insertOrderedList', false, null);
+            }
+        }
+
+        function insertEmoji() {
+            const emoji = prompt('Enter emoji (e.g., 😊, 😂, 🤣)');
+            if (emoji) {
+                document.execCommand('insertHTML', false, emoji);
+            }
+        }
+
+        function insertLink() {
+            const url = prompt('Enter URL:');
+            if (url) {
+                document.execCommand('createLink', false, url);
+            }
+        }
+
+        function insertImage() {
+            const url = prompt('Enter image URL:');
+            if (url) {
+                document.execCommand('insertImage', false, url);
+            }
+        }
+
+        function alignText(align) {
+            document.execCommand('justify' + align, false, null);
+        }
+
+        function loadAnswers() {
+            const answersContainer = document.getElementById('answersList');
+
+            if (answers.length === 0) {
+                answersContainer.innerHTML = '<p style="text-align: center; color: #636e72; padding: 20px;">No answers yet. Be the first to answer!</p>';
+                return;
+            }
+
+            // Sort answers: accepted first, then by votes
+            const sortedAnswers = [...answers].sort((a, b) => {
+                if (a.accepted && !b.accepted) return -1;
+                if (!a.accepted && b.accepted) return 1;
+                return b.votes - a.votes;
+            });
+
+            answersContainer.innerHTML = sortedAnswers.map(answer => `
+                <div class="answer-card ${answer.accepted ? 'accepted-answer' : ''}" id="answer-${answer.id}">
+                    <div class="answer-header">
+                        <div>
+                            <span class="answer-author">${answer.author}</span>
+                            ${answer.accepted ? '<span class="accepted-badge">✓ Accepted</span>' : ''}
+                        </div>
+                        <span class="answer-time">${answer.time}</span>
+                    </div>
+                    <div class="answer-content">${answer.content.replace(/\n/g, '<br>')}</div>
+                    <div class="answer-actions">
+                        <div class="vote-section">
+                            <button class="vote-btn" onclick="voteAnswer(${answer.id}, 'up')">▲</button>
+                            <span class="vote-count">${answer.votes}</span>
+                            <button class="vote-btn" onclick="voteAnswer(${answer.id}, 'down')">▼</button>
+                        </div>
+                        ${currentUser && currentUser.username === 'john_doe' && !answer.accepted ?
+                    `<button class="accept-answer-btn" onclick="acceptAnswer(${answer.id})">Accept Answer</button>` :
+                    ''
+                }
+                        <button class="btn btn-secondary" onclick="exportAnswerToPDF(${answer.id})">📄 Export as PDF</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportAnswerToPDF(answerId) {
+            const answer = answers.find(a => a.id === answerId);
+            if (!answer) return alert("Answer not found!");
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            const content = `
+Author: ${answer.author}
+Time: ${answer.time}
+Votes: ${answer.votes}
+
+${answer.content.replace(/<br>/g, '\n').replace(/<[^>]+>/g, '')}
+`;
+
+            doc.text(content, 10, 10);
+            doc.save(`answer_${answerId}.pdf`);
+        }
+
+
+
+        function voteAnswer(answerId, direction) {
+            if (!currentUser) {
+                alert('Please login to vote');
+                return;
+            }
+            if (currentUser.role === 'guest') {
+                alert('Guest users cannot vote. Please login or register to vote on answers.');
+                return;
+            }
+
+            const answer = answers.find(a => a.id === answerId);
+            if (answer) {
+                if (direction === 'up') {
+                    answer.votes++;
+                } else {
+                    answer.votes--;
+                }
+                loadAnswers(); // Reload to update display
+            }
+        }
+
+        function acceptAnswer(answerId) {
+            if (!currentUser) {
+                alert('Please login to accept answers');
+                return;
+            }
+            if (currentUser.role === 'guest') {
+                alert('Guest users cannot accept answers. Please login or register to accept answers.');
+                return;
+            }
+
+            // Only question owner can accept answers
+            if (currentUser.username !== 'john_doe') {
+                alert('Only the question owner can accept answers');
+                return;
+            }
+
+            // Remove accepted status from all answers
+            answers.forEach(answer => answer.accepted = false);
+
+            // Accept the selected answer
+            const answer = answers.find(a => a.id === answerId);
+            if (answer) {
+                answer.accepted = true;
+                loadAnswers(); // Reload to update display
+
+                // Add notification
+                addNotification(`You accepted an answer to your question "${document.getElementById('questionDetailTitle').textContent}"`);
+            }
+        }
+
+        function submitAnswer() {
+            if (!currentUser) {
+                alert('Please login to post an answer');
+                return;
+            }
+            if (currentUser.role === 'guest') {
+                alert('Guest users cannot post answers. Please login or register to answer questions.');
+                return;
+            }
+
+            const answerText = document.getElementById('answerTextarea').innerHTML.trim();
+            if (!answerText) {
+                alert('Please write an answer');
+                return;
+            }
+
+            // Create new answer
+            const newAnswer = {
+                id: answers.length + 1,
+                author: currentUser.username,
+                content: answerText,
+                time: 'Just now',
+                votes: 0,
+                accepted: false
+            };
+
+            answers.push(newAnswer);
+            document.getElementById('answerTextarea').innerHTML = '';
+            document.getElementById('answerCount').textContent = answers.length;
+            loadAnswers();
+
+            // Add notification for question owner
+            addNotification(`@${currentUser.username} answered your question "${document.getElementById('questionDetailTitle').textContent}"`);
+
+            alert('Answer posted successfully!');
+        }
+
+        function addNotification(text) {
+            const notification = {
+                text: text,
+                time: 'Just now',
+                read: false
+            };
+
+            notifications.unshift(notification);
+            updateNotificationCount();
+            updateNotificationDropdown();
+        }
+
+        function updateNotificationCount() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+            document.getElementById('notificationCount').textContent = unreadCount;
+        }
+
+        function updateNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.innerHTML = notifications.slice(0, 5).map((notification, index) => `
+                <div class="notification-item ${notification.read ? 'read' : 'unread'}" onclick="markNotificationRead(${index})">
+                    <div class="notification-text">${notification.text}</div>
+                    <div class="notification-time">${notification.time}</div>
+                </div>
+            `).join('');
+        }
+
+        function markNotificationRead(index) {
+            if (notifications[index]) {
+                notifications[index].read = true;
+                updateNotificationCount();
+                updateNotificationDropdown();
+            }
+        }
+
+        // Form submissions
+        const askForm = document.getElementById('askQuestionForm');
+        askForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const title = this.querySelector('input[type="text"]').value;
+            const description = this.querySelector('[contenteditable="true"]').innerHTML;
+
+            if (selectedTags.length === 0) {
+                alert('Please add at least one tag');
+                return;
+            }
+
+            // Add new question to the TOP of the array
+            const newQuestion = {
+                id: questions.length ? Math.max(...questions.map(q => q.id)) + 1 : 1,
+                title,
+                body: description,
+                author: currentUser ? currentUser.username : 'anonymous',
+                time: 'Just now',
+                votes: 0,
+                tags: [...selectedTags],
+                answers: []
+            };
+            questions.push(newQuestion); // Remove this line
+            questions.unshift(newQuestion); // Add to the top
+            renderQuestions();
+            alert('Question posted successfully!');
+            closeModal('askQuestionModal');
+
+            // Reset form
+            this.reset();
+            this.querySelector('[contenteditable="true"]').innerHTML = '';
+            selectedTags = [];
+            updateSelectedTags();
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const username = this.querySelector('input[type="text"]').value;
+
+            // Simulate login
+            currentUser = { username: username, role: 'user' };
+            updateUserInterface();
+            closeModal('loginModal');
+            this.reset();
+        });
+
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const username = this.querySelector('input[type="text"]').value;
+
+            // Simulate registration
+            currentUser = { username: username, role: 'user' };
+            updateUserInterface();
+            closeModal('registerModal');
+            this.reset();
+        });
+
+        function updateUserInterface() {
+            const authButtons = document.getElementById('authButtons');
+            const userRole = document.getElementById('userRole');
+            const askQuestionBtn = document.querySelector('button[onclick="showAskQuestion()"]');
+
+            if (currentUser) {
+                authButtons.innerHTML = `
+                    <span style="margin-right: 15px;">Welcome, ${currentUser.username}!</span>
+                    <button class="btn btn-secondary" onclick="logout()">Logout</button>
+                `;
+                userRole.textContent = currentUser.role.charAt(0).toUpperCase() + currentUser.role.slice(1);
+                userRole.className = `user-role role-${currentUser.role}`;
+
+                // Update Ask Question button for guest users
+                if (currentUser.role === 'guest') {
+                    if (askQuestionBtn) {
+                        askQuestionBtn.textContent = 'Ask Question (Guest)';
+                        askQuestionBtn.style.opacity = '0.6';
+                        askQuestionBtn.title = 'Guest users cannot post questions';
+                    }
+                } else {
+                    if (askQuestionBtn) {
+                        askQuestionBtn.textContent = 'Ask Question';
+                        askQuestionBtn.style.opacity = '1';
+                        askQuestionBtn.title = '';
+                    }
+                }
+            } else {
+                authButtons.innerHTML = `
+                    <button class="btn btn-secondary" onclick="showLogin()">Login</button>
+                    <button class="btn btn-primary" onclick="showRegister()">Register</button>
+                `;
+                userRole.textContent = 'Guest';
+                userRole.className = 'user-role role-guest';
+            }
+        }
+
+        function logout() {
+            console.log('Logout function called');
+            localStorage.removeItem('stackit_user');
+            console.log('User data removed from localStorage');
+
+            // Try to redirect to login page
+            try {
+                window.location.href = 'login.html';
+                console.log('Redirecting to login page');
+            } catch (error) {
+                console.error('Error redirecting:', error);
+                // Fallback: try to redirect to the same directory
+                window.location.href = './login.html';
+            }
+        }
+
+        // Close modals when clicking outside
+        window.addEventListener('click', function (e) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+
+            // Close notifications when clicking outside
+            const notificationDropdown = document.getElementById('notificationDropdown');
+            const notificationBell = document.querySelector('.notification-bell');
+            if (!notificationBell.contains(e.target)) {
+                notificationDropdown.style.display = 'none';
+            }
+        });
+
+        // Handle tag input Enter key
+        document.getElementById('tagInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const value = this.value.trim();
+                if (value && !selectedTags.includes(value)) {
+                    addTag(value);
+                }
+            }
+        });
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function () {
+            initializeUser(); // Initialize user on page load
+
+            // Add some sample notifications
+            notifications = [
+                { text: 'Someone answered your question about React hooks', time: '2 minutes ago', read: false },
+                { text: '@john_doe mentioned you in a comment', time: '1 hour ago', read: false },
+                { text: 'New comment on your answer', time: '3 hours ago', read: true }
+            ];
+
+            updateNotificationCount();
+            updateNotificationDropdown();
+
+            // Simulate real-time updates
+            setInterval(function () {
+                const stats = document.querySelectorAll('.stat-number');
+                stats.forEach(stat => {
+                    const current = parseInt(stat.textContent);
+                    if (Math.random() > 0.95) { // 5% chance to update
+                        stat.textContent = current + Math.floor(Math.random() * 3) + 1;
+                    }
+                });
+            }, 5000);
+
+            // Render initial questions
+            renderQuestions();
+        });
+
+        // Add smooth scrolling to question cards
+        document.querySelectorAll('.question-card').forEach(card => {
+            card.addEventListener('click', function (e) {
+                if (!e.target.closest('.vote-btn') && !e.target.closest('.tag')) {
+                    this.style.transform = 'scale(0.98)';
+                    setTimeout(() => {
+                        this.style.transform = '';
+                    }, 100);
+                }
+            });
+        });
+
+        // Add typing animation to contenteditable areas
+        document.querySelectorAll('.form-textarea').forEach(textarea => {
+            textarea.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = Math.max(120, this.scrollHeight) + 'px';
+            });
+        });
+
+        function toggleTheme() {
+            const body = document.body;
+            const checkbox = document.getElementById('themeToggleCheckbox');
+
+            body.classList.toggle('dark-mode');
+            checkbox.checked = body.classList.contains('dark-mode');
+        }
+
+        function showAskQuestion() {
+            if (!currentUser) {
+                alert('Please login to ask a question');
+                return;
+            }
+            if (currentUser.role === 'guest') {
+                alert('Guest users cannot post questions. Please login or register to ask questions.');
+                return;
+            }
+            document.getElementById('askQuestionModal').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('loginModal').style.display = 'block';
+        }
+        function showRegister() {
+            document.getElementById('registerModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            var modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Home navigation function
+        function goToHome() {
+            // Check if user has scrolled down
+            if (window.scrollY > 100) {
+                // Smooth scroll to top
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            } else {
+                // If already at top, refresh the page to go to home
+                window.location.reload();
+            }
+        }
+    </script>
+    <style>
+        body.dark-mode .question-card,
+        body.dark-mode .question-card *,
+        body.dark-mode .question-title,
+        body.dark-mode .question-meta,
+        body.dark-mode .question-meta *,
+        body.dark-mode .vote-section,
+        body.dark-mode .vote-section * {
+            color: var(--foreground) !important;
+            opacity: 1 !important;
+        }
+
+        .modal-content {
+            background: var(--background) !important;
+            color: var(--foreground) !important;
+        }
+
+        .question-detail-body {
+            background: var(--questions-bg) !important;
+            color: var(--foreground) !important;
+        }
+    </style>
+</body>
+
+</html>

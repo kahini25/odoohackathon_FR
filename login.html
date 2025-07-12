@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StackIt - Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="icon.jpg">
+    <style>
+        :root {
+            --background: #ffffff;
+            --foreground: #222f2e;
+            --primary: #00bfae;
+            --secondary: #74b9ff;
+            --accent: #55efc4;
+            --highlight: #e0f7fa;
+            --hue1: #b2f7ef;
+            --hue2: #a3e4db;
+            --hue3: #d4fc79;
+            --hue4: #96e6a1;
+            --questions-bg: #f8fcff;
+            --question-card-bg: #e8f8f5;
+            --comment-bg: #f8f9fa;
+            --comment-border: #00bfae;
+            --comment-nested-bg: #ffffff;
+            --comment-nested-border: #74b9ff;
+            --comment-nested2-bg: #e0f7fa;
+            --comment-nested2-border: #55efc4;
+            --header-bg: #ffffffee;
+            --header-shadow: 0 8px 32px rgba(0, 191, 174, 0.08);
+            --btn-primary-bg: linear-gradient(45deg, #00bfae, #74b9ff);
+            --btn-primary-color: #fff;
+            --btn-secondary-bg: #e0f7fa;
+            --btn-secondary-color: #00bfae;
+        }
+
+        body.dark-mode {
+            --background: #181818;
+            --foreground: #fff;
+            --aqua: #74f9ff;
+            --primary: #ff9800;
+            --secondary: #ff5252;
+            --accent: #ff7043;
+            --highlight: #222;
+            --hue1: #23272e;
+            --hue2: #1a1d23;
+            --hue3: #2d1e2f;
+            --hue4: #2e2323;
+            --questions-bg: #23272e;
+            --question-card-bg: #2d1e2f;
+            --comment-bg: #232323;
+            --comment-border: #ff9800;
+            --comment-nested-bg: #181818;
+            --comment-nested-border: #ff5252;
+            --comment-nested2-bg: #232323;
+            --comment-nested2-border: #ff7043;
+            --header-bg: #181818ee;
+            --header-shadow: 0 8px 32px rgba(255, 152, 0, 0.08);
+            --btn-primary-bg: linear-gradient(45deg, #ff9800, #ff5252);
+            --btn-primary-color: #fff;
+            --btn-secondary-bg: #232323;
+            --btn-secondary-color: #ff9800;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            width: 100vw;
+            font-family: 'Segoe UI', 'Inter', 'Roboto', Arial, sans-serif;
+            background: var(--background);
+            color: var(--foreground);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* Center the card vertically and horizontally */
+        }
+
+        .login-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            background-size: cover;
+            background-repeat: no-repeat;
+            filter: blur(2px) brightness(0.85);
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 1;
+            background: var(--background);
+            color: var(--foreground);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 1.5px 4px rgba(0, 191, 174, 0.08);
+            border: 1.5px solid var(--accent);
+            max-width: 700px;
+            width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: row;
+            overflow: hidden;
+            min-height: 420px;
+            align-items: stretch;
+            padding: 32px 0;
+        }
+
+        .login-left {
+            flex: 1.2;
+            padding: 24px 48px 18px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+            background: var(--questions-bg);
+            border-right: 1px solid var(--accent);
+        }
+
+        .login-logo {
+            font-size: 3.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Segoe UI', 'Roboto', 'Inter', Arial, sans-serif;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-logo img {
+            height: 3.2rem;
+            vertical-align: middle;
+            margin-right: 14px;
+        }
+
+        .login-subtitle {
+            font-size: 1.1rem;
+            color: var(--foreground);
+            margin-bottom: 28px;
+            font-weight: 400;
+        }
+
+        .login-policy {
+            font-size: 0.95rem;
+            color: #555;
+            margin-bottom: 24px;
+        }
+
+        .login-policy a {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .social-login {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-bottom: 18px;
+            width: 100%;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 18px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 12px;
+            background: var(--background);
+            color: var(--foreground);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            width: 100%;
+        }
+
+        .social-btn:hover {
+            background: var(--highlight);
+        }
+
+        .social-btn.google::before {
+            content: '';
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            background: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg') center/contain no-repeat;
+        }
+
+        .social-btn.facebook::before {
+            content: '';
+            display: inline-block;
+            width: 22px;
+            height: 22px;
+            background: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/facebook/facebook-original.svg') center/contain no-repeat;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 18px 0 10px 0;
+            width: 100%;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--accent);
+        }
+
+        .divider span {
+            padding: 0 16px;
+            color: var(--foreground);
+            font-size: 0.95rem;
+        }
+
+        .signup-link {
+            color: var(--primary);
+            font-size: 1rem;
+            text-align: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-decoration: underline;
+            width: 100%;
+        }
+
+        .login-right {
+            flex: 1;
+            background: var(--background);
+            padding: 24px 48px 18px 48px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .login-right h2 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--foreground);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 28px;
+            width: 100%;
+        }
+
+        .login-form label {
+            font-size: 0.98rem;
+            color: var(--foreground);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 1rem;
+            border: 1.5px solid var(--accent);
+            border-radius: 10px;
+            background: var(--questions-bg);
+            color: var(--foreground);
+            transition: border 0.2s, box-shadow 0.2s;
+            margin-bottom: 6px;
+        }
+
+        .login-form input:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 2px var(--primary);
+        }
+
+        .login-btn {
+            padding: 12px 0;
+            font-size: 1rem;
+            border: none;
+            border-radius: 25px;
+            background: var(--btn-primary-bg);
+            color: var(--btn-primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 18px;
+            transition: background 0.2s;
+            width: 100%;
+        }
+
+        .login-btn:hover:not(:disabled) {
+            background: var(--btn-secondary-bg);
+            color: var(--btn-secondary-color);
+        }
+
+        .login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .forgot-password {
+            margin-top: 18px;
+            text-align: center;
+            width: 100%;
+            margin-left: 0;
+        }
+
+        .forgot-password a {
+            color: var(--accent);
+            font-size: 0.95rem;
+            text-decoration: underline;
+        }
+
+        .footer {
+            margin: 30px auto 10px auto;
+            text-align: center;
+            color: var(--foreground);
+            font-size: 0.95rem;
+            z-index: 2;
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+            margin: 0 8px;
+            transition: color 0.2s;
+        }
+
+        .footer a:hover {
+            color: var(--secondary);
+        }
+
+        .lang-select {
+            margin: 10px auto 0 auto;
+            text-align: center;
+            color: var(--primary);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .register-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--foreground);
+            text-align: center;
+        }
+
+        .login-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 18px;
+            color: var(--foreground);
+            text-align: center;
+        }
+
+        @media (max-width: 900px) {
+            .login-card {
+                flex-direction: column;
+                max-width: 98vw;
+                min-height: unset;
+            }
+
+            .login-right {
+                border-left: none;
+                border-top: 1px solid var(--accent);
+            }
+
+            .login-left {
+                border-right: none;
+                border-bottom: 1px solid var(--accent);
+            }
+        }
+
+        @media (max-width: 600px) {
+            .login-card {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+
+            .login-left,
+            .login-right {
+                padding: 28px 12px 18px 12px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="login-bg"></div>
+    <div class="login-card">
+        <div class="login-left">
+            <div class="login-logo"><img src="icon.jpg" alt="StackIt Logo">StackIt</div>
+            <div class="login-subtitle">Stack knowledge, share solutions</div>
+            <div class="login-policy">
+                By continuing you indicate that you agree to StackIt's <a href="#">Terms of Service</a> and <a
+                    href="#">Privacy Policy</a>.
+            </div>
+            <div class="social-login">
+                <button class="social-btn google" type="button">Continue with Google</button>
+                <button class="social-btn facebook" type="button">Continue with Facebook</button>
+                <div style="display: flex; gap: 12px; margin-top: 10px; justify-content: center;">
+                    <button type="button" id="showLoginBtn" class="login-btn"
+                        style="padding: 8px 18px; font-size: 1rem; border-radius: 8px; background: var(--btn-secondary-bg); color: var(--btn-secondary-color); border: 1.5px solid var(--primary);">Login</button>
+                    <button type="button" id="showRegisterBtn" class="login-btn"
+                        style="padding: 8px 18px; font-size: 1rem; border-radius: 8px; background: var(--btn-secondary-bg); color: var(--btn-secondary-color); border: 1.5px solid var(--primary);">Sign
+                        Up</button>
+                </div>
+            </div>
+            <div class="divider"><span>or</span></div>
+            <div class="signup-link" onclick="continueAsGuest()">Continue as guest</div>
+        </div>
+        <div class="login-right">
+            <div id="loginSection">
+                <h2 class="login-title">Login</h2>
+                <form class="login-form" id="loginForm">
+                    <div>
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="Your email" required>
+                    </div>
+                    <div>
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Your password" required>
+                    </div>
+                    <button type="submit" class="login-btn" id="loginBtn">Login</button>
+                </form>
+                <div class="forgot-password">
+                    <a href="#">Forgot password?</a>
+                </div>
+                <div id="emailLoginSection"></div>
+            </div>
+            <div id="registerSection" style="display:none;">
+                <h2 class="register-title">Sign Up</h2>
+                <form class="login-form" id="registerForm">
+                    <div>
+                        <label for="register-username">Username</label>
+                        <input type="text" id="register-username" placeholder="Choose a username" required>
+                    </div>
+                    <div>
+                        <label for="register-email">Email</label>
+                        <input type="email" id="register-email" placeholder="Your email" required>
+                    </div>
+                    <div>
+                        <label for="register-password">Password</label>
+                        <input type="password" id="register-password" placeholder="Create a password" required>
+                    </div>
+                    <button type="submit" class="login-btn" id="registerBtn">Sign Up</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="lang-select">ગુજરાતી &gt;</div>
+    <div class="footer">
+        About · Careers · Privacy · Terms · Contact · Languages · Your Ad Choices · Press · © StackIt, 2025
+    </div>
+    <script>
+        // Validation functions
+        function validateEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+
+        function validatePassword(password) {
+            // Password must be at least 8 characters long
+            // Must contain at least one uppercase letter, one lowercase letter, and one number
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,}$/;
+            return passwordRegex.test(password);
+        }
+
+        // Social login buttons
+        document.querySelector('.social-btn.google').addEventListener('click', function () {
+            const userInfo = {
+                email: 'user@gmail.com',
+                username: 'google_user',
+                loginTime: new Date().toISOString(),
+                provider: 'google'
+            };
+            localStorage.setItem('stackit_user', JSON.stringify(userInfo));
+            window.location.href = 'odoo.html';
+        });
+
+        document.querySelector('.social-btn.facebook').addEventListener('click', function () {
+            const userInfo = {
+                email: 'user@facebook.com',
+                username: 'facebook_user',
+                loginTime: new Date().toISOString(),
+                provider: 'facebook'
+            };
+            localStorage.setItem('stackit_user', JSON.stringify(userInfo));
+            window.location.href = 'odoo.html';
+        });
+
+        // Form login
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        loginForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            if (!validateEmail(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            if (!validatePassword(password)) {
+                alert('Password must be at least 8 characters with uppercase, lowercase, and number');
+                return;
+            }
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Signing In...';
+            const userInfo = {
+                email: email,
+                username: email.split('@')[0],
+                loginTime: new Date().toISOString(),
+                provider: 'email'
+            };
+            localStorage.setItem('stackit_user', JSON.stringify(userInfo));
+            setTimeout(() => {
+                window.location.href = 'odoo.html';
+            }, 1000);
+        });
+
+        // Continue as guest
+        function continueAsGuest() {
+            const guestUser = {
+                username: 'guest',
+                role: 'guest',
+                loginTime: new Date().toISOString(),
+                provider: 'guest'
+            };
+            localStorage.setItem('stackit_user', JSON.stringify(guestUser));
+            window.location.href = 'odoo.html';
+        }
+
+        // Toggle login/register forms
+        document.getElementById('showLoginBtn').onclick = function () {
+            document.getElementById('loginSection').style.display = '';
+            document.getElementById('registerSection').style.display = 'none';
+        };
+        document.getElementById('showRegisterBtn').onclick = function () {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('registerSection').style.display = '';
+        };
+
+        document.getElementById('registerForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const username = document.getElementById('register-username').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+
+            // Optional validation
+            if (!validateEmail(email)) {
+                alert('Invalid email format.');
+                return;
+            }
+            if (!validatePassword(password)) {
+                alert('Password must have 8+ chars, uppercase, lowercase, and number');
+                return;
+            }
+
+            // Send data to your Node.js backend
+            fetch('http://localhost:3000/api/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, password })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.message === 'User registered successfully') {
+                        alert('Signup successful! Please login.');
+                        document.getElementById('showLoginBtn').click();
+                    } else {
+                        alert(data.message || 'Signup failed');
+                    }
+                })
+                .catch(err => {
+                    alert('Server error');
+                    console.error(err);
+                });
+        });
+
+    </script>
+</body>
+
+</html>
